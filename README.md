@@ -36,6 +36,9 @@ Detailed dosage recommendations.
 Side-effect tracking.
 
 
+Map tool showing nearby clinics and contact information.
+
+
 AI-driven personalization.
 
 
