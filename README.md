@@ -40,5 +40,3 @@ AI-driven personalization.
 
 
 Beautiful UI design beyond the basics (start with simple forms + results).
-
-asdf
