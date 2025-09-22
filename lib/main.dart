@@ -55,6 +55,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  bool _isChecked = false;
+  void _onButtonPressed() {
+    // Action when button is pressed
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Button pressed!")),
+    );
+  }
 
   void _incrementCounter() {
     setState(() {
@@ -108,6 +115,31 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
+            ),
+             const SizedBox(height: 20),
+            // Checkbox with label
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Checkbox(
+                  value: _isChecked,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _isChecked = value ?? false;
+                    });
+                  },
+                ),
+                const Text("Check me!"),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Display the checkbox state
+            Text(_isChecked ? "Checked" : "Unchecked"),
+            const SizedBox(height: 10),
+            // The button
+            ElevatedButton(
+              onPressed: _isChecked ? _onButtonPressed : null, //enable when chekced
+              child: const Text("Button"),
             ),
           ],
         ),
