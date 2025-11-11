@@ -1,0 +1,1512 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const OTCApp());
+}
+
+class OTCApp extends StatelessWidget {
+  const OTCApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'OTC Recs',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const LandingPage(),
+    );
+  }
+}
+
+// User Profile Storage
+class UserProfile {
+  static int? age;
+  static String? gender;
+  static bool? isPregnant;
+  static double? temperature;
+  
+  static bool isComplete() {
+    return age != null && gender != null && isPregnant != null;
+  }
+  
+  static void clear() {
+    age = null;
+    gender = null;
+    isPregnant = null;
+    temperature = null;
+  }
+}
+
+// Simple User Storage
+class UserStorage {
+  static final Map<String, String> _users = {
+    'test': 'password',
+  };
+
+  static bool validateUser(String email, String password) {
+    return _users[email] == password;
+  }
+
+  static void registerUser(String email, String password) {
+    _users[email] = password;
+  }
+}
+
+// Saved Medicines Storage
+class SavedMedicines {
+  static final List<Medicine> _savedMedicines = [];
+
+  static List<Medicine> getSaved() => _savedMedicines;
+
+  static bool isSaved(Medicine medicine) {
+    return _savedMedicines.any((m) => m.name == medicine.name);
+  }
+
+  static void toggleSave(Medicine medicine) {
+    if (isSaved(medicine)) {
+      _savedMedicines.removeWhere((m) => m.name == medicine.name);
+    } else {
+      _savedMedicines.add(medicine);
+    }
+  }
+}
+
+// Medicine Data Model
+class Medicine {
+  final String name;
+  final String purpose;
+  final String warning;
+  final String dosage;
+  final List<String> symptoms;
+  final double rating;
+  final String? link;
+
+  Medicine({
+    required this.name,
+    required this.purpose,
+    required this.warning,
+    required this.dosage,
+    required this.symptoms,
+    this.rating = 0.0,
+    this.link,
+  });
+}
+
+// Fake Dataset
+class MedicineDatabase {
+  static final List<Medicine> medicines = [
+    Medicine(
+      name: 'Tylenol',
+      purpose: 'Pain reliever, Headache reducer',
+      warning: 'Liver damage if overused or with alcohol.',
+      dosage: 'Pills, Adult 500-1000mg every 4-6 hours',
+      symptoms: ['headache', 'fever', 'muscle aches', 'joint pain'],
+      rating: 4.5,
+      link: 'https://www.tylenol.com',
+    ),
+    Medicine(
+      name: 'Aspirin',
+      purpose: 'Pain reliever, Headache reducer, anti-inflammatory',
+      warning: 'Can cause stomach bleeding not for children.',
+      dosage: 'adult 325 - 650 mg every 4-6 hours.',
+      symptoms: ['headache', 'fever', 'muscle aches', 'joint pain'],
+      rating: 4.2,
+      link: 'https://www.bayer.com/en/products/aspirin',
+    ),
+    Medicine(
+      name: 'Advil (Ibuprofen)',
+      purpose: 'Pain reliever, anti-inflammatory',
+      warning: 'Can cause stomach issues, not for severe kidney disease.',
+      dosage: 'Adult 200-400mg every 4-6 hours',
+      symptoms: ['headache', 'fever', 'muscle aches', 'back pain'],
+      rating: 4.6,
+      link: 'https://www.advil.com',
+    ),
+    Medicine(
+      name: 'Claritin',
+      purpose: 'Allergy relief, antihistamine',
+      warning: 'May cause drowsiness in some people.',
+      dosage: 'Adult 10mg once daily',
+      symptoms: ['runny nose', 'itchy eyes', 'sneezing'],
+      rating: 4.3,
+      link: 'https://www.claritin.com',
+    ),
+    Medicine(
+      name: 'Benadryl',
+      purpose: 'Allergy relief, sleep aid',
+      warning: 'Causes drowsiness, do not drive.',
+      dosage: 'Adult 25-50mg every 4-6 hours',
+      symptoms: ['runny nose', 'itchy eyes', 'sneezing'],
+      rating: 4.1,
+      link: 'https://www.benadryl.com',
+    ),
+    Medicine(
+      name: 'Robitussin',
+      purpose: 'Cough suppressant',
+      warning: 'Do not exceed recommended dose.',
+      dosage: 'Adult 10-20ml every 4 hours',
+      symptoms: ['cough', 'wet cough', 'chest tightness'],
+      rating: 4.0,
+      link: 'https://www.robitussin.com',
+    ),
+    Medicine(
+      name: 'Mucinex',
+      purpose: 'Expectorant, loosens mucus',
+      warning: 'Drink plenty of water while taking.',
+      dosage: 'Adult 600-1200mg every 12 hours',
+      symptoms: ['cough', 'chest tightness', 'nasal congestion'],
+      rating: 4.4,
+      link: 'https://www.mucinex.com',
+    ),
+    Medicine(
+      name: 'Sudafed',
+      purpose: 'Nasal decongestant',
+      warning: 'May increase blood pressure.',
+      dosage: 'Adult 30-60mg every 4-6 hours',
+      symptoms: ['nasal congestion', 'sinus pressure'],
+      rating: 4.3,
+      link: 'https://www.sudafed.com',
+    ),
+    Medicine(
+      name: 'Pepto-Bismol',
+      purpose: 'Upset stomach, diarrhea relief',
+      warning: 'Do not use if allergic to aspirin.',
+      dosage: 'Adult 30ml every 30-60 minutes as needed',
+      symptoms: ['nausea', 'diarrhea', 'upset stomach', 'heartburn'],
+      rating: 4.2,
+      link: 'https://www.pepto-bismol.com',
+    ),
+    Medicine(
+      name: 'Tums',
+      purpose: 'Antacid, heartburn relief',
+      warning: 'Do not exceed 7 tablets in 24 hours.',
+      dosage: 'Adult 2-4 tablets as needed',
+      symptoms: ['heartburn', 'upset stomach'],
+      rating: 4.5,
+      link: 'https://www.tums.com',
+    ),
+  ];
+
+  static List<Medicine> searchBySymptoms(List<String> symptoms) {
+    Set<Medicine> results = {};
+    for (String symptom in symptoms) {
+      for (Medicine med in medicines) {
+        if (med.symptoms.contains(symptom.toLowerCase())) {
+          results.add(med);
+        }
+      }
+    }
+    return results.toList();
+  }
+}
+
+// Landing Page
+class LandingPage extends StatelessWidget {
+  const LandingPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.blue[700]!, Colors.blue[400]!, Colors.blue[200]!],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.medical_services,
+                      size: 100,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  // Title
+                  const Text(
+                    'OTC Recs',
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Subtitle
+                  const Text(
+                    'Your Personal Medicine Advisor',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w300,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 60),
+                  // Features
+                  _buildFeature(Icons.search, 'Find the right OTC medicine'),
+                  const SizedBox(height: 16),
+                  _buildFeature(Icons.verified_user, 'Personalized recommendations'),
+                  const SizedBox(height: 16),
+                  _buildFeature(Icons.bookmark, 'Save your favorites'),
+                  const SizedBox(height: 60),
+                  // Get Started Button
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignInPage(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.blue[700],
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 60,
+                        vertical: 20,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 8,
+                    ),
+                    child: const Text(
+                      'Get Started',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  // Disclaimer
+                  Text(
+                    'Not a substitute for professional medical advice',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeature(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 28),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// User Profile Dialog
+class UserProfileDialog extends StatefulWidget {
+  const UserProfileDialog({super.key});
+
+  @override
+  State<UserProfileDialog> createState() => _UserProfileDialogState();
+}
+
+class _UserProfileDialogState extends State<UserProfileDialog> {
+  final _ageController = TextEditingController();
+  final _tempController = TextEditingController();
+  String? _selectedGender;
+  bool? _isPregnant;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Complete Your Profile'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Help us provide better recommendations',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            // Age
+            TextField(
+              controller: _ageController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Age *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.calendar_today),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Gender
+            DropdownButtonFormField<String>(
+              value: _selectedGender,
+              decoration: const InputDecoration(
+                labelText: 'Gender *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'Male', child: Text('Male')),
+                DropdownMenuItem(value: 'Female', child: Text('Female')),
+                DropdownMenuItem(value: 'Other', child: Text('Other')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedGender = value;
+                  if (value != 'Female') {
+                    _isPregnant = false;
+                  } else {
+                    _isPregnant = null;
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            // Pregnant (only for females)
+            if (_selectedGender == 'Female')
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Are you pregnant? *',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: RadioListTile<bool>(
+                          title: const Text('Yes'),
+                          value: true,
+                          groupValue: _isPregnant,
+                          onChanged: (value) {
+                            setState(() {
+                              _isPregnant = value;
+                            });
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        child: RadioListTile<bool>(
+                          title: const Text('No'),
+                          value: false,
+                          groupValue: _isPregnant,
+                          onChanged: (value) {
+                            setState(() {
+                              _isPregnant = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            // Temperature (optional)
+            TextField(
+              controller: _tempController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Temperature (°F) - Optional',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.thermostat),
+                hintText: 'e.g., 98.6',
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Skip'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_ageController.text.isEmpty || _selectedGender == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please fill in required fields (Age, Gender)'),
+                ),
+              );
+              return;
+            }
+
+            if (_selectedGender == 'Female' && _isPregnant == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please indicate if you are pregnant'),
+                ),
+              );
+              return;
+            }
+
+            UserProfile.age = int.tryParse(_ageController.text);
+            UserProfile.gender = _selectedGender;
+            UserProfile.isPregnant = _isPregnant ?? false;
+            UserProfile.temperature = _tempController.text.isNotEmpty
+                ? double.tryParse(_tempController.text)
+                : null;
+
+            Navigator.pop(context, true);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue[700],
+          ),
+          child: const Text('Continue'),
+        ),
+      ],
+    );
+  }
+}
+
+// Reusable Header Widget
+class AppHeader extends StatelessWidget {
+  final bool showBackButton;
+  
+  const AppHeader({super.key, this.showBackButton = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue[700],
+      ),
+      child: Row(
+        children: [
+          if (showBackButton)
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          // Home button
+          if (!showBackButton)
+            IconButton(
+              icon: const Icon(Icons.home, color: Colors.white, size: 28),
+              tooltip: 'Home',
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomePage()),
+                  (route) => false,
+                );
+              },
+            ),
+          // Logo and Title centered
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.blue[300],
+                  child: const Icon(Icons.medical_services, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'OTC Recs',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Cart button
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.shopping_cart, color: Colors.white, size: 28),
+                if (SavedMedicines.getSaved().isNotEmpty)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '${SavedMedicines.getSaved().length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SavedMedicinesPage(),
+                ),
+              );
+            },
+          ),
+          // Profile button
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.white, size: 28),
+            tooltip: 'Profile',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const UserProfileDialog(),
+              );
+            },
+          ),
+          // Logout button
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white, size: 28),
+            tooltip: 'Logout',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Logout'),
+                    content: const Text('Are you sure you want to logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          UserProfile.clear();
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LandingPage(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        child: const Text('Logout', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Sign In Page
+class SignInPage extends StatefulWidget {
+  const SignInPage({super.key});
+
+  @override
+  State<SignInPage> createState() => _SignInPageState();
+}
+
+class _SignInPageState extends State<SignInPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String _errorMessage = '';
+
+  void _signIn() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text;
+
+    if (UserStorage.validateUser(email, password)) {
+      // Show profile dialog before proceeding
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const UserProfileDialog(),
+      );
+
+      if (result == true || result == false) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        }
+      }
+    } else {
+      setState(() {
+        _errorMessage = 'Invalid username or password';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue[700]!, Colors.blue[300]!],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.medical_services, size: 80, color: Colors.white),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'OTC Recs',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(
+                            labelText: 'Username',
+                            prefixIcon: Icon(Icons.person),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                            prefixIcon: Icon(Icons.lock),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        if (_errorMessage.isNotEmpty)
+                          Text(
+                            _errorMessage,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: _signIn,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue[700],
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 60,
+                              vertical: 16,
+                            ),
+                          ),
+                          child: const Text('Sign In', style: TextStyle(fontSize: 18)),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Test account: test / password',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Home Page with Symptom Search
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final List<String> selectedSymptoms = [];
+  final TextEditingController _searchController = TextEditingController();
+  String searchQuery = '';
+
+  final Map<String, List<String>> symptomCategories = {
+    'Pain & Fever': ['headache', 'muscle aches', 'back pain', 'joint pain', 'fever'],
+    'Cold & Allergy': ['runny nose', 'itchy eyes', 'sneezing', 'nasal congestion', 'sinus pressure'],
+    'Cough & Chest': ['cough', 'dry cough', 'wet cough', 'chest tightness'],
+    'Digestive': ['heartburn', 'nausea', 'diarrhea', 'upset stomach'],
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    // Show profile dialog if not complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!UserProfile.isComplete()) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const UserProfileDialog(),
+        );
+      }
+    });
+  }
+
+  void toggleSymptom(String symptom) {
+    setState(() {
+      if (selectedSymptoms.contains(symptom)) {
+        selectedSymptoms.remove(symptom);
+      } else {
+        selectedSymptoms.add(symptom);
+      }
+    });
+  }
+
+  void searchMedicines() {
+    if (selectedSymptoms.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select at least one symptom')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResultsPage(symptoms: selectedSymptoms),
+      ),
+    );
+  }
+
+  Map<String, List<String>> getFilteredCategories() {
+    if (searchQuery.isEmpty) {
+      return symptomCategories;
+    }
+
+    Map<String, List<String>> filtered = {};
+    
+    symptomCategories.forEach((category, symptoms) {
+      List<String> matchingSymptoms = symptoms.where((symptom) {
+        return symptom.toLowerCase().contains(searchQuery.toLowerCase());
+      }).toList();
+
+      if (matchingSymptoms.isNotEmpty) {
+        filtered[category] = matchingSymptoms;
+      }
+    });
+
+    return filtered;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Map<String, List<String>> filteredCategories = getFilteredCategories();
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            const AppHeader(showBackButton: false),
+
+            // User Info Banner (if profile is complete)
+            if (UserProfile.isComplete())
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                color: Colors.blue[50],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.person, size: 16, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Age: ${UserProfile.age} | ${UserProfile.gender}${UserProfile.temperature != null ? " | Temp: ${UserProfile.temperature}°F" : ""}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Search Bar
+            Container(
+              color: Colors.blue[500],
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search symptoms...',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: searchMedicines,
+                    child: const Text('Search'),
+                  ),
+                ],
+              ),
+            ),
+
+            // Selected Symptoms
+            if (selectedSymptoms.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.grey[100],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Selected Symptoms',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: selectedSymptoms.map((symptom) {
+                        return Chip(
+                          label: Text(symptom),
+                          deleteIcon: const Icon(Icons.close, size: 18),
+                          onDeleted: () => toggleSymptom(symptom),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Symptom Categories
+            Expanded(
+              child: filteredCategories.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No symptoms match "$searchQuery"',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: filteredCategories.entries.map((entry) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              entry.key,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: entry.value.map((symptom) {
+                                bool isSelected = selectedSymptoms.contains(symptom);
+                                return GestureDetector(
+                                  onTap: () => toggleSymptom(symptom),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? Colors.blue[700] : Colors.white,
+                                      border: Border.all(color: Colors.blue[700]!),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      symptom,
+                                      style: TextStyle(
+                                        color: isSelected ? Colors.white : Colors.blue[700],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        );
+                      }).toList(),
+                    ),
+            ),
+
+            // Find Medicines Button
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: ElevatedButton(
+                onPressed: searchMedicines,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[700],
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text('Find Medicines', style: TextStyle(fontSize: 18)),
+              ),
+            ),
+
+            // Footer
+            Container(
+              width: double.infinity,
+              color: Colors.grey[800],
+              padding: const EdgeInsets.all(12),
+              child: const Text(
+                'Not a substitute for professional medical advice. Always consult healthcare providers.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Saved Medicines Page
+class SavedMedicinesPage extends StatefulWidget {
+  const SavedMedicinesPage({super.key});
+
+  @override
+  State<SavedMedicinesPage> createState() => _SavedMedicinesPageState();
+}
+
+class _SavedMedicinesPageState extends State<SavedMedicinesPage> {
+  @override
+  Widget build(BuildContext context) {
+    List<Medicine> savedMeds = SavedMedicines.getSaved();
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header with back button
+            const AppHeader(showBackButton: true),
+
+            // Page title
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              color: Colors.blue[500],
+              child: const Text(
+                'Saved Medicines',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            Expanded(
+              child: savedMeds.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.bookmark_border, size: 80, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No saved medicines yet',
+                            style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Save medicines to view them here',
+                            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: savedMeds.length,
+                      itemBuilder: (context, index) {
+                        Medicine med = savedMeds[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: const Icon(Icons.medication, size: 40, color: Colors.orange),
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  med.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                if (med.rating > 0)
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        med.rating.toStringAsFixed(1),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[700],
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                            subtitle: Text(med.purpose),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      SavedMedicines.toggleSave(med);
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Removed from saved'),
+                                        duration: Duration(seconds: 1),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => MedicineDetailPage(medicine: med),
+                                      ),
+                                    ).then((_) {
+                                      setState(() {});
+                                    });
+                                  },
+                                  child: const Text('View'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            Container(
+              width: double.infinity,
+              color: Colors.grey[800],
+              padding: const EdgeInsets.all(12),
+              child: const Text(
+                'Not a substitute for professional medical advice. Always consult healthcare providers.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Results Page
+class ResultsPage extends StatelessWidget {
+  final List<String> symptoms;
+
+  const ResultsPage({super.key, required this.symptoms});
+
+  @override
+  Widget build(BuildContext context) {
+    List<Medicine> results = MedicineDatabase.searchBySymptoms(symptoms);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header with back button
+            const AppHeader(showBackButton: true),
+
+            // Page title
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              color: Colors.blue[500],
+              child: const Text(
+                'Recommended Medicines',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            Expanded(
+              child: results.isEmpty
+                  ? const Center(child: Text('No medicines found'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: results.length,
+                      itemBuilder: (context, index) {
+                        Medicine med = results[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: const Icon(Icons.medication, size: 40, color: Colors.orange),
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  med.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                if (med.rating > 0)
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        med.rating.toStringAsFixed(1),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[700],
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                            subtitle: Text(med.purpose),
+                            trailing: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MedicineDetailPage(medicine: med),
+                                  ),
+                                );
+                              },
+                              child: const Text('View'),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            Container(
+              width: double.infinity,
+              color: Colors.grey[800],
+              padding: const EdgeInsets.all(12),
+              child: const Text(
+                'Not a substitute for professional medical advice. Always consult healthcare providers.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Medicine Detail Page
+class MedicineDetailPage extends StatefulWidget {
+  final Medicine medicine;
+
+  const MedicineDetailPage({super.key, required this.medicine});
+
+  @override
+  State<MedicineDetailPage> createState() => _MedicineDetailPageState();
+}
+
+class _MedicineDetailPageState extends State<MedicineDetailPage> {
+  void _launchURL() {
+    if (widget.medicine.link != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Opening: ${widget.medicine.link}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool isSaved = SavedMedicines.isSaved(widget.medicine);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header with back button
+            const AppHeader(showBackButton: true),
+
+            // Medicine name header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              color: Colors.blue[500],
+              child: Text(
+                widget.medicine.name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.medication,
+                          size: 100,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Rating Display
+                    if (widget.medicine.rating > 0)
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.amber[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.amber[200]!),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star, color: Colors.amber, size: 28),
+                              const SizedBox(width: 8),
+                              Text(
+                                widget.medicine.rating.toStringAsFixed(1),
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Text(
+                                '/ 5.0',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 24),
+                    
+                    _buildInfoSection('Purpose', widget.medicine.purpose),
+                    _buildInfoSection('Warning', widget.medicine.warning),
+                    _buildInfoSection('Dosage', widget.medicine.dosage),
+                    
+                    // Product Link
+                    if (widget.medicine.link != null) ...[
+                      const SizedBox(height: 16),
+                      _buildInfoSection('Product Website', widget.medicine.link!),
+                    ],
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Action Buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              SavedMedicines.toggleSave(widget.medicine);
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  SavedMedicines.isSaved(widget.medicine) 
+                                      ? 'Saved!' 
+                                      : 'Removed from saved'
+                                ),
+                                duration: const Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                          icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border),
+                          label: Text(isSaved ? 'Saved' : 'Save'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isSaved ? Colors.green : Colors.blue[700],
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 16,
+                            ),
+                          ),
+                        ),
+                        if (widget.medicine.link != null) ...[
+                          const SizedBox(width: 16),
+                         
+                            
+                            
+                          
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              color: Colors.grey[800],
+              padding: const EdgeInsets.all(12),
+              child: const Text(
+                'Not a substitute for professional medical advice. Always consult healthcare providers.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoSection(String title, String content) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: const TextStyle(fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+}
