@@ -1,24 +1,12 @@
-# Build stage
-FROM debian:bullseye-slim AS build
-
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-  curl git unzip xz-utils zip libglu1-mesa \
-  && rm -rf /var/lib/apt/lists/*
-
-# Install Flutter SDK
-RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1 /flutter
-ENV PATH="/flutter/bin:${PATH}"
-
-# Skip gradle setup, precache web tools only
-RUN flutter config --enable-web --no-analytics
-RUN flutter precache --web --no-android --no-ios --no-linux --no-windows --no-macos --no-fuchsia
+# Build stage - use official Flutter image
+FROM ghcr.io/cirruslabs/flutter:stable AS build
 
 WORKDIR /app
-COPY pubspec.* ./
-RUN flutter pub get
-
 COPY . .
+
+# Build web app
+RUN flutter config --enable-web --no-analytics
+RUN flutter pub get
 RUN flutter build web --release
 
 # Run stage
