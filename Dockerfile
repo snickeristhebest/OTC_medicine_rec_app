@@ -1,26 +1,19 @@
-# Build stage
-FROM debian:bullseye AS build
-
-RUN apt-get update && apt-get install -y \
-  curl unzip xz-utils zip libglu1-mesa git
-
-RUN git clone https://github.com/flutter/flutter.git /usr/local/flutter
-ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
-
-RUN flutter channel stable
-RUN flutter upgrade
-RUN flutter config --enable-web
+# Build stage - use official Flutter image
+FROM ghcr.io/cirruslabs/flutter:stable AS build
 
 WORKDIR /app
 COPY . .
-RUN flutter build web
+
+# Build web app
+RUN flutter config --enable-web --no-analytics
+RUN flutter pub get
+RUN flutter build web --release
 
 # Run stage
 FROM nginx:alpine
 
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Create nginx config for Flutter
 RUN cat > /etc/nginx/conf.d/default.conf <<'EOF'
 server {
     listen 80;
