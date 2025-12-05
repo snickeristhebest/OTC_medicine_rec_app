@@ -1,32 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:otc_recs/main.dart';
 import 'package:otc_recs/models/medicine.dart';
 import 'package:otc_recs/services/medicine_database.dart';
 
 void main() {
-  group('Widget Tests', () {
-    testWidgets(
-      'MyApp should render without errors',
-      (WidgetTester tester) async {
-        // Build our app and trigger a frame.
-        await tester.pumpWidget(const MyApp());
-        
-        // Verify that the app renders
-        expect(find.byType(MaterialApp), findsOneWidget);
-      },
-      skip: 'Widget test not yet implemented',
-    );
-
-    testWidgets(
-      'LandingPage should display correctly',
-      (WidgetTester tester) async {
-        // TODO: Implement landing page test
-      },
-      skip: 'Landing page test not yet implemented',
-    );
-  });
-
   group('Model Tests', () {
     test(
       'Medicine model should create instance with required fields',
