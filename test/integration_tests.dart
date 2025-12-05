@@ -13,7 +13,7 @@ void main() {
         // Verify that the app renders
         expect(find.byType(MaterialApp), findsOneWidget);
       },
-      skip: 'Widget test not yet implemented',
+      skip: true,
     );
 
     testWidgets(
@@ -21,7 +21,7 @@ void main() {
       (WidgetTester tester) async {
         // TODO: Implement landing page test
       },
-      skip: 'Landing page test not yet implemented',
+      skip: true,
     );
   });
 }
