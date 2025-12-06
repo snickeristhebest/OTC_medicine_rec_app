@@ -13,7 +13,6 @@ void main() {
         // Verify that the app renders
         expect(find.byType(MaterialApp), findsOneWidget);
       },
-      skip: true,
     );
 
     testWidgets(

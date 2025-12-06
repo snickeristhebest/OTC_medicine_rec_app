@@ -10,7 +10,7 @@ class MobileLayout extends StatelessWidget {
     return Center(
       child: Container(
         width: 320,
-        height: 640,
+        constraints: const BoxConstraints(minHeight: 500, maxHeight: 640),
         margin: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -50,11 +50,13 @@ class MobileLayout extends StatelessWidget {
             ),
             // Main content
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                   // Logo and title section
                   Column(
                     children: [
@@ -89,7 +91,7 @@ class MobileLayout extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 20),
                   
                   // Feature items
                   Column(
@@ -99,13 +101,13 @@ class MobileLayout extends StatelessWidget {
                         title: 'Find medicines for your',
                         subtitle: 'symptoms',
                       ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 10),
                       MobileFeatureItem(
                         icon: Icons.healing,
                         title: 'Check medicine',
                         subtitle: 'compatibility',
                       ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 10),
                       MobileFeatureItem(
                         icon: Icons.info_outline,
                         title: 'Learn about precautions',
@@ -113,12 +115,12 @@ class MobileLayout extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 20),
                   
                   // Get Started button
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 40,
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.push(
@@ -147,11 +149,11 @@ class MobileLayout extends StatelessWidget {
                     ),
                   ),
                   
-                  const Spacer(),
+                  const SizedBox(height: 20),
                   
                   // Disclaimer
                   const Padding(
-                    padding: EdgeInsets.only(bottom: 20),
+                    padding: EdgeInsets.only(top: 10),
                     child: Text(
                       'Not a substitute for professional medical advice.\nAlways consult healthcare providers.',
                       textAlign: TextAlign.center,
@@ -163,6 +165,7 @@ class MobileLayout extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
               ),
             ),
           ],
