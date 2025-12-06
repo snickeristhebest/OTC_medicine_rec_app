@@ -13,6 +13,7 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('landing-page'),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

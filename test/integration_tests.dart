@@ -13,14 +13,17 @@ void main() {
         // Verify that the app renders
         expect(find.byType(MaterialApp), findsOneWidget);
       },
+      skip: false,
     );
 
     testWidgets(
       'LandingPage should display correctly',
       (WidgetTester tester) async {
         // TODO: Implement landing page test
+        await tester.pumpWidget(const MyApp());
+        expect(find.byKey(ValueKey("landing-page")),findsOneWidget);
       },
-      skip: true,
+      skip: false,
     );
   });
 }
