@@ -1,7 +1,46 @@
 import 'package:flutter/material.dart';
-import '../services/user_storage.dart';
 import '../widgets/user_profile_dialog.dart';
+import '../services/user_storage.dart';
 import '../pages/home_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+// Service class for user authentication
+class AuthService {
+  // Add authentication methods here
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // Sign Up method
+  Future<User?> signUp(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
+      return userCredential.user;
+    } catch (e) {
+      print("Error in signUp: $e"); // will need better error handling later
+      return null;
+    }
+  }
+
+  // Sign In method
+  Future<User?> signIn(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return userCredential.user;
+    } catch (e) {
+      print("Error in signIn: $e"); // will need better error handling later
+      return null;
+    }
+  }
+
+  // Sign Out method
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  User? get currentUser => _auth.currentUser;
+}
 
 // Sign In Page
 class SignInPage extends StatefulWidget {
@@ -12,33 +51,101 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
+  final AuthService _authService = AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String _errorMessage = '';
 
   void _signIn() async {
+    setState(() {
+      _errorMessage = '';
+    });
+
     String email = _emailController.text.trim();
     String password = _passwordController.text;
+    // Basic non-empty validation
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter an email and password.';
+      });
+      return;
+    }
 
+    // Local test account support: bypass Firebase for known local users
     if (UserStorage.validateUser(email, password)) {
-      // Show profile dialog before proceeding
-      final result = await showDialog<bool>(
+      await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (context) => UserProfileDialog(),
       );
 
-      if (result == true || result == false) {
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-        }
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
+      return;
+    }
+
+    // Otherwise, try Firebase sign-in
+    final user = await _authService.signIn(email, password);
+
+    if (user != null) {
+      // Show profile dialog before proceeding
+      await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => UserProfileDialog(),
+      );
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
       }
     } else {
       setState(() {
-        _errorMessage = 'Invalid username or password';
+        _errorMessage = 'Sign in failed. Please check your credentials.';
+      });
+    }
+  }
+
+  void _signUp() async {
+    setState(() {
+      _errorMessage = '';
+    });
+
+    String email = _emailController.text.trim();
+    String password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please provide an email and password.';
+      });
+      return;
+    }
+
+    final user = await _authService.signUp(email, password);
+
+    if (user != null) {
+      // Optionally show the profile dialog after signup as well
+      await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => UserProfileDialog(),
+      );
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
+    } else {
+      setState(() {
+        _errorMessage = 'Sign up failed. Please try a different email.';
       });
     }
   }
@@ -61,7 +168,11 @@ class _SignInPageState extends State<SignInPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.medical_services, size: 80, color: Colors.white),
+                  const Icon(
+                    Icons.medical_services,
+                    size: 80,
+                    color: Colors.white,
+                  ),
                   const SizedBox(height: 20),
                   const Text(
                     'OTC Recs',
@@ -114,12 +225,34 @@ class _SignInPageState extends State<SignInPage> {
                               vertical: 16,
                             ),
                           ),
-                          child: const Text('Sign In', style: TextStyle(fontSize: 18)),
+                          child: const Text(
+                            'Sign In',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: _signUp,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.blue[700],
+                            side: BorderSide(color: Colors.blue[700]!),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 48,
+                              vertical: 14,
+                            ),
+                          ),
+                          child: const Text(
+                            'Sign Up',
+                            style: TextStyle(fontSize: 16),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'Test account: test / password',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ),
