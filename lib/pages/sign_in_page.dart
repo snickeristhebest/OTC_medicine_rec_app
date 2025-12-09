@@ -199,7 +199,7 @@ class _SignInPageState extends State<SignInPage> {
                         TextField(
                           controller: _emailController,
                           decoration: const InputDecoration(
-                            labelText: 'Username',
+                            labelText: 'Email',
                             prefixIcon: Icon(Icons.person),
                             border: OutlineInputBorder(),
                           ),
