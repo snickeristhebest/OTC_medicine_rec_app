@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/user_profile_dialog.dart';
+import '../pages/profile_settings_page.dart';
 import '../services/user_storage.dart';
 import '../pages/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -73,10 +73,9 @@ class _SignInPageState extends State<SignInPage> {
 
     // Local test account support: bypass Firebase for known local users
     if (UserStorage.validateUser(email, password)) {
-      await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => UserProfileDialog(),
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileSettingsPage()),
       );
 
       if (mounted) {
@@ -92,11 +91,10 @@ class _SignInPageState extends State<SignInPage> {
     final user = await _authService.signIn(email, password);
 
     if (user != null) {
-      // Show profile dialog before proceeding
-      await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => UserProfileDialog(),
+      // Show profile settings page before proceeding
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileSettingsPage()),
       );
 
       if (mounted) {
@@ -130,11 +128,10 @@ class _SignInPageState extends State<SignInPage> {
     final user = await _authService.signUp(email, password);
 
     if (user != null) {
-      // Optionally show the profile dialog after signup as well
-      await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => UserProfileDialog(),
+      // Optionally show the profile settings page after signup as well
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileSettingsPage()),
       );
 
       if (mounted) {
