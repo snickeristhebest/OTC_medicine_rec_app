@@ -36,10 +36,14 @@ class UserProfile {
 
   static void fromMap(Map<String, dynamic>? map) {
     if (map == null) return;
-    age = map['age'] is int ? map['age'] as int : (map['age'] != null ? (map['age'] as num).toInt() : null);
+    age = map['age'] is int
+        ? map['age'] as int
+        : (map['age'] != null ? (map['age'] as num).toInt() : null);
     gender = map['gender'] as String?;
     isPregnant = map['isPregnant'] as bool?;
-    temperature = map['temperature'] != null ? (map['temperature'] as num).toDouble() : null;
+    temperature = map['temperature'] != null
+        ? (map['temperature'] as num).toDouble()
+        : null;
     notifyListeners();
   }
 }
