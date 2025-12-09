@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
+import '../services/user_storage.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
@@ -17,7 +18,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   @override
   void initState() {
     super.initState();
-    // Pre-populate from UserProfile if available
+    // Pre-populate quickly from any already-loaded static values
     if (UserProfile.age != null) {
       _ageController.text = UserProfile.age.toString();
     }
@@ -26,6 +27,20 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     }
     _selectedGender = UserProfile.gender;
     _isPregnant = UserProfile.isPregnant;
+
+    // Attempt to load stored profile from Firestore for signed-in user
+    UserStorage.loadUserProfileForCurrentUser().then((_) {
+      setState(() {
+        if (UserProfile.age != null) {
+          _ageController.text = UserProfile.age.toString();
+        }
+        if (UserProfile.temperature != null) {
+          _tempController.text = UserProfile.temperature.toString();
+        }
+        _selectedGender = UserProfile.gender;
+        _isPregnant = UserProfile.isPregnant;
+      });
+    });
   }
 
   @override
@@ -35,9 +50,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     super.dispose();
   }
 
-  void _saveProfile() {
+  Future<void> _saveProfile() async {
     if (_ageController.text.isEmpty || _selectedGender == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('Please fill in required fields (Age, Gender)'),
         ),
@@ -46,7 +62,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     }
 
     if (_selectedGender == 'Female' && _isPregnant == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.showSnackBar(
         const SnackBar(content: Text('Please indicate if you are pregnant')),
       );
       return;
@@ -58,8 +75,26 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     UserProfile.temperature = _tempController.text.isNotEmpty
         ? double.tryParse(_tempController.text)
         : null;
+    // Notify listeners immediately so UI updates while we persist
+    UserProfile.notifyListeners();
 
-    Navigator.pop(context, true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      // Persist to Firestore if a Firebase user is signed in (no-op otherwise)
+      print('ProfileSettingsPage: saving profile -> ${UserProfile.toMap()}');
+      await UserStorage.saveUserProfileForCurrentUser();
+      print('ProfileSettingsPage: saveUserProfileForCurrentUser completed');
+      if (!mounted) return;
+      messenger.showSnackBar(const SnackBar(content: Text('Profile saved')));
+      Navigator.pop(context, true);
+    } catch (e) {
+      print('ProfileSettingsPage: error saving profile: $e');
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text('Error saving profile: $e')),
+        );
+      }
+    }
   }
 
   @override

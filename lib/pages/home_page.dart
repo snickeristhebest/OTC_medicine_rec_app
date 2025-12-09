@@ -105,28 +105,33 @@ class _HomePageState extends State<HomePage> {
             // Header
             const AppHeader(showBackButton: false),
 
-            // User Info Banner (if profile is complete)
-            if (UserProfile.isComplete())
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                color: Colors.blue[50],
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.person, size: 16, color: Colors.blue),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Age: ${UserProfile.age} | ${UserProfile.gender}${UserProfile.temperature != null ? " | Temp: ${UserProfile.temperature}°F" : ""}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
+            // User Info Banner (reactive to profile changes)
+            ValueListenableBuilder<int>(
+              valueListenable: UserProfile.profileVersion,
+              builder: (context, _, __) {
+                if (!UserProfile.isComplete()) return const SizedBox.shrink();
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  color: Colors.blue[50],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.person, size: 16, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Age: ${UserProfile.age} | ${UserProfile.gender}${UserProfile.temperature != null ? " | Temp: ${UserProfile.temperature}°F" : ""}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                    ],
+                  ),
+                );
+              },
+            ),
 
             // Search Bar
             Container(
