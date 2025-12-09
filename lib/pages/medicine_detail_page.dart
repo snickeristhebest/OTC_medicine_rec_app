@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/medicine.dart';
 import '../services/saved_medicines.dart';
 import '../widgets/app_header.dart';
@@ -13,14 +14,32 @@ class MedicineDetailPage extends StatefulWidget {
 }
 
 class _MedicineDetailPageState extends State<MedicineDetailPage> {
-  void _launchURL() {
-    if (widget.medicine.link != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Opening: ${widget.medicine.link}'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+  Future<void> _launchURL() async {
+    if (widget.medicine.link != null && widget.medicine.link!.isNotEmpty) {
+      final Uri url = Uri.parse(widget.medicine.link!);
+      try {
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Could not open link'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error opening link: $e'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -32,10 +51,8 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header with back button
             const AppHeader(showBackButton: true),
 
-            // Medicine name header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -117,15 +134,37 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                     const SizedBox(height: 24),
 
                     _buildInfoSection('Purpose', widget.medicine.purpose),
+                    _buildInfoSection('Price', '\$${widget.medicine.price.toStringAsFixed(2)}'),
                     _buildInfoSection('Warning', widget.medicine.warning),
                     _buildInfoSection('Dosage', widget.medicine.dosage),
-
-                    // Product Link
-                    if (widget.medicine.link != null) ...[
+                    
+                    // Product Link - Show clickable link
+                    if (widget.medicine.link != null && widget.medicine.link!.isNotEmpty) ...[
                       const SizedBox(height: 16),
-                      _buildInfoSection(
-                        'Product Website',
-                        widget.medicine.link!,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Product Website',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          InkWell(
+                            onTap: _launchURL,
+                            child: Text(
+                              widget.medicine.link!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
 
@@ -180,7 +219,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                             ),
                           ),
                         ),
-                        if (widget.medicine.link != null) ...[
+                        if (widget.medicine.link != null && widget.medicine.link!.isNotEmpty) ...[
                           const SizedBox(width: 16),
                           ElevatedButton.icon(
                             onPressed: _launchURL,
