@@ -1,7 +1,53 @@
 import 'package:flutter/material.dart';
+import '../pages/profile_settings_page.dart';
 import '../services/user_storage.dart';
-import '../widgets/user_profile_dialog.dart';
+import '../services/saved_medicines.dart';
 import '../pages/home_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+// Service class for user authentication
+class AuthService {
+  // Add authentication methods here
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // Sign Up method
+  Future<User?> signUp(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
+      print(
+        'AuthService.signUp: created user uid=${userCredential.user?.uid} email=$email',
+      );
+      return userCredential.user;
+    } catch (e) {
+      print("Error in signUp: $e"); // will need better error handling later
+      return null;
+    }
+  }
+
+  // Sign In method
+  Future<User?> signIn(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      print(
+        'AuthService.signIn: signed in uid=${userCredential.user?.uid} email=$email',
+      );
+      return userCredential.user;
+    } catch (e) {
+      print("Error in signIn: $e"); // will need better error handling later
+      return null;
+    }
+  }
+
+  // Sign Out method
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  User? get currentUser => _auth.currentUser;
+}
 
 // Sign In Page
 class SignInPage extends StatefulWidget {
@@ -12,33 +58,99 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
+  final AuthService _authService = AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String _errorMessage = '';
 
   void _signIn() async {
+    setState(() {
+      _errorMessage = '';
+    });
+
     String email = _emailController.text.trim();
     String password = _passwordController.text;
+    // Basic non-empty validation
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter an email and password.';
+      });
+      return;
+    }
 
+    // Local test account support: bypass Firebase for known local users
     if (UserStorage.validateUser(email, password)) {
-      // Show profile dialog before proceeding
-      final result = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => UserProfileDialog(),
-      );
+      // Treat local test user as existing user: go straight to HomePage
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
+      return;
+    }
 
-      if (result == true || result == false) {
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-        }
+    // Otherwise, try Firebase sign-in
+    final user = await _authService.signIn(email, password);
+
+    if (user != null) {
+      // Existing Firebase user: load remote profile and saved medicines,
+      // then go straight to HomePage (no profile page shown).
+      await UserStorage.loadUserProfileForCurrentUser();
+      await SavedMedicines.loadSavedForCurrentUser();
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
       }
     } else {
       setState(() {
-        _errorMessage = 'Invalid username or password';
+        _errorMessage = 'Sign in failed. Please check your credentials.';
+      });
+    }
+  }
+
+  void _signUp() async {
+    setState(() {
+      _errorMessage = '';
+    });
+
+    String email = _emailController.text.trim();
+    String password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please provide an email and password.';
+      });
+      return;
+    }
+
+    final user = await _authService.signUp(email, password);
+
+    if (user != null) {
+      // For newly created users, show the profile settings page first.
+      // After they save their profile, the flow will continue here and
+      // then navigate to the HomePage.
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileSettingsPage()),
+      );
+
+      // Load remote profile and saved medicines (no-op if not present)
+      await UserStorage.loadUserProfileForCurrentUser();
+      await SavedMedicines.loadSavedForCurrentUser();
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
+    } else {
+      setState(() {
+        _errorMessage = 'Sign up failed. Please try a different email.';
       });
     }
   }
@@ -61,7 +173,11 @@ class _SignInPageState extends State<SignInPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.medical_services, size: 80, color: Colors.white),
+                  const Icon(
+                    Icons.medical_services,
+                    size: 80,
+                    color: Colors.white,
+                  ),
                   const SizedBox(height: 20),
                   const Text(
                     'OTC Recs',
@@ -83,7 +199,7 @@ class _SignInPageState extends State<SignInPage> {
                         TextField(
                           controller: _emailController,
                           decoration: const InputDecoration(
-                            labelText: 'Username',
+                            labelText: 'Email',
                             prefixIcon: Icon(Icons.person),
                             border: OutlineInputBorder(),
                           ),
@@ -114,12 +230,34 @@ class _SignInPageState extends State<SignInPage> {
                               vertical: 16,
                             ),
                           ),
-                          child: const Text('Sign In', style: TextStyle(fontSize: 18)),
+                          child: const Text(
+                            'Sign In',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: _signUp,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.blue[700],
+                            side: BorderSide(color: Colors.blue[700]!),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 48,
+                              vertical: 14,
+                            ),
+                          ),
+                          child: const Text(
+                            'Sign Up',
+                            style: TextStyle(fontSize: 16),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'Test account: test / password',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ),

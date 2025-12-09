@@ -3,12 +3,12 @@ import '../services/saved_medicines.dart';
 import '../pages/home_page.dart';
 import '../pages/saved_medicines_page.dart';
 import '../models/user_profile.dart';
-import 'user_profile_dialog.dart';
+import '../pages/profile_settings_page.dart';
 import '../pages/landing_page.dart';
 
 class AppHeader extends StatelessWidget {
   final bool showBackButton;
-  
+
   const AppHeader({super.key, this.showBackButton = false});
 
   @override
@@ -16,9 +16,7 @@ class AppHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue[700],
-      ),
+      decoration: BoxDecoration(color: Colors.blue[700]),
       child: Row(
         children: [
           if (showBackButton)
@@ -46,7 +44,10 @@ class AppHeader extends StatelessWidget {
               children: [
                 CircleAvatar(
                   backgroundColor: Colors.blue[300],
-                  child: const Icon(Icons.medical_services, color: Colors.white),
+                  child: const Icon(
+                    Icons.medical_services,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -60,32 +61,41 @@ class AppHeader extends StatelessWidget {
               ],
             ),
           ),
-          // Cart button
+          // Cart button (reactive to saved count)
           IconButton(
-            icon: Stack(
-              children: [
-                const Icon(Icons.shopping_cart, color: Colors.white, size: 28),
-                if (SavedMedicines.getSaved().isNotEmpty)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        '${SavedMedicines.getSaved().length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+            icon: ValueListenableBuilder<int>(
+              valueListenable: SavedMedicines.savedCount,
+              builder: (context, count, _) {
+                return Stack(
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    if (count > 0)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '$count',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                );
+              },
             ),
             onPressed: () {
               Navigator.push(
@@ -101,9 +111,11 @@ class AppHeader extends StatelessWidget {
             icon: const Icon(Icons.person, color: Colors.white, size: 28),
             tooltip: 'Profile',
             onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const UserProfileDialog(),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfileSettingsPage(),
+                ),
               );
             },
           ),
@@ -134,7 +146,10 @@ class AppHeader extends StatelessWidget {
                             (route) => false,
                           );
                         },
-                        child: const Text('Logout', style: TextStyle(color: Colors.red)),
+                        child: const Text(
+                          'Logout',
+                          style: TextStyle(color: Colors.red),
+                        ),
                       ),
                     ],
                   );

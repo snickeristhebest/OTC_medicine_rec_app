@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
 import '../widgets/app_header.dart';
-import '../widgets/user_profile_dialog.dart';
+import '../pages/profile_settings_page.dart';
 import '../pages/results_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,8 +17,20 @@ class _HomePageState extends State<HomePage> {
   String searchQuery = '';
 
   final Map<String, List<String>> symptomCategories = {
-    'Pain & Fever': ['headache', 'muscle aches', 'back pain', 'joint pain', 'fever'],
-    'Cold & Allergy': ['runny nose', 'itchy eyes', 'sneezing', 'nasal congestion', 'sinus pressure'],
+    'Pain & Fever': [
+      'headache',
+      'muscle aches',
+      'back pain',
+      'joint pain',
+      'fever',
+    ],
+    'Cold & Allergy': [
+      'runny nose',
+      'itchy eyes',
+      'sneezing',
+      'nasal congestion',
+      'sinus pressure',
+    ],
     'Cough & Chest': ['cough', 'dry cough', 'wet cough', 'chest tightness'],
     'Digestive': ['heartburn', 'nausea', 'diarrhea', 'upset stomach'],
   };
@@ -29,10 +41,9 @@ class _HomePageState extends State<HomePage> {
     // Show profile dialog if not complete
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!UserProfile.isComplete()) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => const UserProfileDialog(),
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileSettingsPage()),
         );
       }
     });
@@ -69,7 +80,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     Map<String, List<String>> filtered = {};
-    
+
     symptomCategories.forEach((category, symptoms) {
       List<String> matchingSymptoms = symptoms.where((symptom) {
         return symptom.toLowerCase().contains(searchQuery.toLowerCase());
@@ -94,28 +105,33 @@ class _HomePageState extends State<HomePage> {
             // Header
             const AppHeader(showBackButton: false),
 
-            // User Info Banner (if profile is complete)
-            if (UserProfile.isComplete())
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                color: Colors.blue[50],
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.person, size: 16, color: Colors.blue),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Age: ${UserProfile.age} | ${UserProfile.gender}${UserProfile.temperature != null ? " | Temp: ${UserProfile.temperature}°F" : ""}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
+            // User Info Banner (reactive to profile changes)
+            ValueListenableBuilder<int>(
+              valueListenable: UserProfile.profileVersion,
+              builder: (context, _, __) {
+                if (!UserProfile.isComplete()) return const SizedBox.shrink();
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  color: Colors.blue[50],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.person, size: 16, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Age: ${UserProfile.age} | ${UserProfile.gender}${UserProfile.temperature != null ? " | Temp: ${UserProfile.temperature}°F" : ""}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                    ],
+                  ),
+                );
+              },
+            ),
 
             // Search Bar
             Container(
@@ -206,7 +222,9 @@ class _HomePageState extends State<HomePage> {
                               spacing: 8,
                               runSpacing: 8,
                               children: entry.value.map((symptom) {
-                                bool isSelected = selectedSymptoms.contains(symptom);
+                                bool isSelected = selectedSymptoms.contains(
+                                  symptom,
+                                );
                                 return GestureDetector(
                                   onTap: () => toggleSymptom(symptom),
                                   child: Container(
@@ -215,14 +233,20 @@ class _HomePageState extends State<HomePage> {
                                       vertical: 8,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? Colors.blue[700] : Colors.white,
-                                      border: Border.all(color: Colors.blue[700]!),
+                                      color: isSelected
+                                          ? Colors.blue[700]
+                                          : Colors.white,
+                                      border: Border.all(
+                                        color: Colors.blue[700]!,
+                                      ),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Text(
                                       symptom,
                                       style: TextStyle(
-                                        color: isSelected ? Colors.white : Colors.blue[700],
+                                        color: isSelected
+                                            ? Colors.white
+                                            : Colors.blue[700],
                                       ),
                                     ),
                                   ),
@@ -246,7 +270,10 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: const Text('Find Medicines', style: TextStyle(fontSize: 18)),
+                child: const Text(
+                  'Find Medicines',
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
             ),
 
