@@ -72,7 +72,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Rating Display
                     if (widget.medicine.rating > 0)
                       Center(
@@ -89,7 +89,11 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star, color: Colors.amber, size: 28),
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 28,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 widget.medicine.rating.toStringAsFixed(1),
@@ -111,43 +115,65 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                         ),
                       ),
                     const SizedBox(height: 24),
-                    
+
                     _buildInfoSection('Purpose', widget.medicine.purpose),
                     _buildInfoSection('Warning', widget.medicine.warning),
                     _buildInfoSection('Dosage', widget.medicine.dosage),
-                    
+
                     // Product Link
                     if (widget.medicine.link != null) ...[
                       const SizedBox(height: 16),
-                      _buildInfoSection('Product Website', widget.medicine.link!),
+                      _buildInfoSection(
+                        'Product Website',
+                        widget.medicine.link!,
+                      ),
                     ],
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Action Buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              SavedMedicines.toggleSave(widget.medicine);
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  SavedMedicines.isSaved(widget.medicine) 
-                                      ? 'Saved!' 
-                                      : 'Removed from saved'
+                          onPressed: () async {
+                            final messenger = ScaffoldMessenger.of(context);
+
+                            try {
+                              await SavedMedicines.toggleSave(widget.medicine);
+                              if (!mounted) return;
+                              setState(() {});
+                              final nowSaved = SavedMedicines.isSaved(
+                                widget.medicine,
+                              );
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    nowSaved ? 'Saved!' : 'Removed from saved',
+                                  ),
+                                  duration: const Duration(seconds: 1),
                                 ),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
+                              );
+                            } catch (e) {
+                              if (mounted) {
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Error updating saved state: $e',
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
                           },
-                          icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border),
+                          icon: Icon(
+                            isSaved ? Icons.bookmark : Icons.bookmark_border,
+                          ),
                           label: Text(isSaved ? 'Saved' : 'Save'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isSaved ? Colors.green : Colors.blue[700],
+                            backgroundColor: isSaved
+                                ? Colors.green
+                                : Colors.blue[700],
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
                               vertical: 16,
@@ -206,10 +232,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            content,
-            style: const TextStyle(fontSize: 16),
-          ),
+          Text(content, style: const TextStyle(fontSize: 16)),
         ],
       ),
     );

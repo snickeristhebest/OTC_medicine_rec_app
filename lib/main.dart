@@ -4,23 +4,14 @@ import 'pages/home_page.dart';
 import 'api-test.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
 
-// initializing firebase with config values for now, will move to env file later...
+// Initialize Firebase and run the app
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     print("Starting Firebase initialization...");
-    await Firebase.initializeApp(
-      options: const FirebaseOptions(
-        apiKey: "AIzaSyCt0rH5UhpTlf1Ji2OCC30mKoke58M-q4k",
-        authDomain: "otc-recs.firebaseapp.com",
-        projectId: "otc-recs",
-        storageBucket: "otc-recs.firebasestorage.app",
-        messagingSenderId: "639474301712",
-        appId: "1:639474301712:web:7c334677cad7f40c68c395",
-        measurementId: "G-91MRJ123HG",
-      ),
-    );
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
     print("Firebase initialized: ${Firebase.apps.isNotEmpty}");
   } catch (e, stack) {
     print("Error initializing Firebase: $e");
