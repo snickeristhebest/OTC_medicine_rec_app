@@ -2,8 +2,30 @@ import 'package:flutter/material.dart';
 import 'pages/landing_page.dart';
 import 'pages/home_page.dart';
 import 'api-test.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-void main() {
+// initializing firebase with config values for now, will move to env file later...
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    print("Starting Firebase initialization...");
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyCt0rH5UhpTlf1Ji2OCC30mKoke58M-q4k",
+        authDomain: "otc-recs.firebaseapp.com",
+        projectId: "otc-recs",
+        storageBucket: "otc-recs.firebasestorage.app",
+        messagingSenderId: "639474301712",
+        appId: "1:639474301712:web:7c334677cad7f40c68c395",
+        measurementId: "G-91MRJ123HG",
+      ),
+    );
+    print("Firebase initialized: ${Firebase.apps.isNotEmpty}");
+  } catch (e, stack) {
+    print("Error initializing Firebase: $e");
+    print(stack);
+  }
   runApp(const MyApp());
 }
 
@@ -21,7 +43,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomePage(),
 
         //test api
-         '/api-test': (context) => ApiTestPage(),
+        '/api-test': (context) => ApiTestPage(),
       },
     );
   }
@@ -50,9 +72,9 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isChecked = false;
   void _onButtonPressed() {
     // Action when button is pressed
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Button pressed!")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Button pressed!")));
   }
 
   void _incrementCounter() {
@@ -108,7 +130,7 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-             const SizedBox(height: 20),
+            const SizedBox(height: 20),
             // Checkbox with label
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -130,7 +152,9 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 10),
             // The button
             ElevatedButton(
-              onPressed: _isChecked ? _onButtonPressed : null, //enable when chekced
+              onPressed: _isChecked
+                  ? _onButtonPressed
+                  : null, //enable when chekced
               child: const Text("Button"),
             ),
           ],
