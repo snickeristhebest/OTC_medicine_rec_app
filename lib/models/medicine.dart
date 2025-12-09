@@ -6,6 +6,7 @@ class Medicine {
   final List<String> symptoms;
   final double rating;
   final String? link;
+  final double price;
 
   Medicine({
     required this.name,
@@ -13,6 +14,7 @@ class Medicine {
     required this.warning,
     required this.dosage,
     required this.symptoms,
+    this.price = 0.0,
     this.rating = 0.0,
     this.link,
   });
