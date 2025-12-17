@@ -50,6 +50,20 @@ class _ResultsPageState extends State<ResultsPage> {
       "breastfeeding": false,
       "top_k": 10,
     });
+    double _parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+
+      if (value is String) {
+        // Remove $ or other symbols, trim whitespace
+        final cleaned = value.replaceAll(RegExp(r'[^0-9.]'), '').trim();
+        return double.tryParse(cleaned) ?? 0.0;
+      }
+
+      return 0.0;
+    }
 
     try {
       final response = await http.post(
@@ -63,47 +77,28 @@ class _ResultsPageState extends State<ResultsPage> {
         final recommended = data["recommended"] as List<dynamic>;
 
         List<Medicine> medicineList = [];
-        for (var item in recommended) {
-          String productName = item['name']?.toString() ?? 'Unknown Product';
-          String purpose = _cleanText(item['purpose']);
-          String link = _cleanText(item['link']);
-          String activeIngredient = _cleanText(item['active_ingredient']);
-          //Handle price
-          double price = 0.0;
-            if (item['price'] != null) {
-              if (item['price'] is num) {
-                price = (item['price'] as num).toDouble();
-              } else if (item['price'] is String) {
-                price = double.tryParse(item['price'].replaceAll("\$", "")) ?? 0.0;
-              }
-            }
-          // Handle rating conversion
-          double rating = 0.0;
-          if (item['rating'] != null) {
-            if (item['rating'] is num) {
-              rating = (item['rating'] as num).toDouble();
-            } else if (item['rating'] is String && item['rating'] != 'N/A') {
-              rating = double.tryParse(item['rating']) ?? 0.0;
-            }
-          }
+         for (var item in recommended) {
+        medicineList.add(Medicine(
+          name: item['name']?.toString() ?? 'Unknown Product',
+          genericName: _cleanText(item['generic_name']),
+          manufacturer: _cleanText(item['manufacturer']),
+          purpose: _cleanText(item['purpose']) != '' ? _cleanText(item['purpose']) : 'OTC medication',
+          uses: _cleanText(item['uses']),
+          category: _cleanText(item['category']),
+          route: _cleanText(item['route']),
+          activeIngredient: _cleanText(item['active_ingredient']),
+          dosage: _cleanText(item['dosage']) != '' ? _cleanText(item['dosage']) : 'Follow package instructions.',
+          warning: _cleanText(item['warnings']) != '' 
+              ? _cleanText(item['warnings']) 
+              : 'Read all warnings and directions on product packaging before use.',
+          symptoms: widget.symptoms,
+          rating: _parseDouble(item['rating']),
+          price: _parseDouble(item['price']),
+          link: _cleanText(item['link']).isNotEmpty ? _cleanText(item['link']) : null,
 
-          // Build warning text from active ingredient
-          String warningText = 'Read all warnings and directions on product packaging before use.';
-          if (activeIngredient.isNotEmpty) {
-            warningText = '$activeIngredient\n\n$warningText';
-          }
-
-          medicineList.add(Medicine(
-            name: productName,
-            purpose: purpose.isNotEmpty ? purpose : 'OTC medication',
-            warning: warningText,
-            dosage: 'Follow package instructions. Use as directed on product label.',
-            symptoms: widget.symptoms,
-            rating: rating,
-            link: link.isNotEmpty && link != 'N/A' ? link : null,
-            price: price, 
-          ));
-        }
+      
+        ));
+      }
 
         setState(() {
           results = medicineList;
