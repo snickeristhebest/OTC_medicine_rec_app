@@ -16,23 +16,36 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
   String searchQuery = '';
 
-  final Map<String, List<String>> symptomCategories = {
-    'Pain & Fever': [
-      'headache',
-      'muscle aches',
-      'back pain',
-      'joint pain',
-      'fever',
-    ],
-    'Cold & Allergy': [
-      'runny nose',
-      'itchy eyes',
-      'sneezing',
-      'nasal congestion',
-      'sinus pressure',
-    ],
-    'Cough & Chest': ['cough', 'dry cough', 'wet cough', 'chest tightness'],
-    'Digestive': ['heartburn', 'nausea', 'diarrhea', 'upset stomach'],
+  // New symptom categories schema
+  final Map<String, Map<String, String>> symptomCategories = {
+    'Sleep & Relax': {
+      'fatigue': 'Fatigue',
+      'sleep': 'Sleep Issues',
+    },
+    'Digestive': {
+      'stomach_upset': 'Stomach Upset',
+      'constipation': 'Constipation',
+      'diarrhea': 'Diarrhea',
+    },
+    'Pain & Fever': {
+      'general_pain': 'General Pain',
+      'muscle_joint': 'Muscle & Joint Pain',
+      'fever': 'Fever',
+    },
+    'Cold & Flu': {
+      'throat': 'Sore Throat',
+      'respiratory': 'Respiratory Issues',
+      'cold': 'Cold & Cough',
+      'flu': 'Flu',
+    },
+    'Skin': {
+      'irritation': 'Skin Irritation',
+      'rash': 'Rash',
+      'acne': 'Acne',
+    },
+    'Sunscreen': {
+      'sun_protection': 'Sun Protection',
+    },
   };
 
   @override
@@ -74,17 +87,22 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Map<String, List<String>> getFilteredCategories() {
+  Map<String, Map<String, String>> getFilteredCategories() {
     if (searchQuery.isEmpty) {
       return symptomCategories;
     }
 
-    Map<String, List<String>> filtered = {};
+    Map<String, Map<String, String>> filtered = {};
 
     symptomCategories.forEach((category, symptoms) {
-      List<String> matchingSymptoms = symptoms.where((symptom) {
-        return symptom.toLowerCase().contains(searchQuery.toLowerCase());
-      }).toList();
+      Map<String, String> matchingSymptoms = {};
+      
+      symptoms.forEach((key, displayName) {
+        if (displayName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+            key.toLowerCase().contains(searchQuery.toLowerCase())) {
+          matchingSymptoms[key] = displayName;
+        }
+      });
 
       if (matchingSymptoms.isNotEmpty) {
         filtered[category] = matchingSymptoms;
@@ -96,7 +114,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    Map<String, List<String>> filteredCategories = getFilteredCategories();
+    Map<String, Map<String, String>> filteredCategories = getFilteredCategories();
 
     return Scaffold(
       body: SafeArea(
@@ -178,11 +196,19 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
-                      children: selectedSymptoms.map((symptom) {
+                      children: selectedSymptoms.map((symptomKey) {
+                        // Find display name for the symptom key
+                        String displayName = symptomKey;
+                        symptomCategories.forEach((category, symptoms) {
+                          if (symptoms.containsKey(symptomKey)) {
+                            displayName = symptoms[symptomKey]!;
+                          }
+                        });
+                        
                         return Chip(
-                          label: Text(symptom),
+                          label: Text(displayName),
                           deleteIcon: const Icon(Icons.close, size: 18),
-                          onDeleted: () => toggleSymptom(symptom),
+                          onDeleted: () => toggleSymptom(symptomKey),
                         );
                       }).toList(),
                     ),
@@ -216,12 +242,13 @@ class _HomePageState extends State<HomePage> {
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: entry.value.map((symptom) {
-                                bool isSelected = selectedSymptoms.contains(
-                                  symptom,
-                                );
+                              children: entry.value.entries.map((symptom) {
+                                String symptomKey = symptom.key;
+                                String displayName = symptom.value;
+                                bool isSelected = selectedSymptoms.contains(symptomKey);
+                                
                                 return GestureDetector(
-                                  onTap: () => toggleSymptom(symptom),
+                                  onTap: () => toggleSymptom(symptomKey),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16,
@@ -237,7 +264,7 @@ class _HomePageState extends State<HomePage> {
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Text(
-                                      symptom,
+                                      displayName,
                                       style: TextStyle(
                                         color: isSelected
                                             ? Colors.white
