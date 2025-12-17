@@ -132,42 +132,89 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                         ),
                       ),
                     const SizedBox(height: 24),
-
-                    _buildInfoSection('Purpose', widget.medicine.purpose),
-                    _buildInfoSection('Price', '\$${widget.medicine.price.toStringAsFixed(2)}'),
-                    _buildInfoSection('Warning', widget.medicine.warning),
-                    _buildInfoSection('Dosage', widget.medicine.dosage),
                     
-                    // Product Link - Show clickable link
-                    if (widget.medicine.link != null && widget.medicine.link!.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Product Website',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          InkWell(
-                            onTap: _launchURL,
-                            child: Text(
-                              widget.medicine.link!,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.blue,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+// Active Ingredient
+if (widget.medicine.activeIngredient != null && 
+    widget.medicine.activeIngredient!.isNotEmpty)
+  _buildInfoSection('Active Ingredient', widget.medicine.activeIngredient!),
 
+// Generic Name
+if (widget.medicine.genericName != null && 
+    widget.medicine.genericName!.isNotEmpty)
+  _buildInfoSection('Generic Name', widget.medicine.genericName!),
+
+// Manufacturer
+if (widget.medicine.manufacturer != null && 
+    widget.medicine.manufacturer!.isNotEmpty)
+  _buildInfoSection('Manufacturer', widget.medicine.manufacturer!),
+
+// Route
+if (widget.medicine.route != null && 
+    widget.medicine.route!.isNotEmpty)
+  _buildInfoSection('Route', widget.medicine.route!),
+
+// Purpose
+_buildInfoSection('Purpose', widget.medicine.purpose),
+
+// Uses
+if (widget.medicine.uses != null && 
+    widget.medicine.uses!.isNotEmpty)
+  _buildInfoSection('Uses', widget.medicine.uses!),
+
+// Category
+if (widget.medicine.category != null && 
+    widget.medicine.category!.isNotEmpty)
+  _buildInfoSection('Category', widget.medicine.category!),
+
+// Dosage
+_buildInfoSection('Dosage', widget.medicine.dosage),
+
+// Warning
+_buildInfoSection('⚠️ Warnings', widget.medicine.warning),
+
+// Price
+_buildInfoSection('Price', '\$${widget.medicine.price.toStringAsFixed(2)}'),
+
+// Rating
+if (widget.medicine.rating > 0)
+  _buildInfoSection('Rating', '${widget.medicine.rating.toStringAsFixed(1)} / 5.0'),
+
+// Relevance Score
+if (widget.medicine.relevanceScore > 0)
+  _buildInfoSection('Match Score', '${(widget.medicine.relevanceScore * 100).toStringAsFixed(0)}%'),
+
+// Product Link - Show clickable link
+if (widget.medicine.link != null && widget.medicine.link!.isNotEmpty) ...[
+  const SizedBox(height: 16),
+  Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Product Website',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.blue,
+        ),
+      ),
+      const SizedBox(height: 8),
+      InkWell(
+        onTap: _launchURL,
+        child: Text(
+          widget.medicine.link!,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.blue,
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
+    ],
+  ),
+],
+
+const SizedBox(height: 24),
+                    
                     const SizedBox(height: 24),
 
                     // Action Buttons
