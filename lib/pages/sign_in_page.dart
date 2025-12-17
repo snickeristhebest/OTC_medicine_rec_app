@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../pages/profile_settings_page.dart';
 import '../services/user_storage.dart';
+import '../services/saved_medicines.dart';
 import '../pages/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -13,6 +14,9 @@ class AuthService {
     try {
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password);
+      print(
+        'AuthService.signUp: created user uid=${userCredential.user?.uid} email=$email',
+      );
       return userCredential.user;
     } catch (e) {
       print("Error in signUp: $e"); // will need better error handling later
@@ -26,6 +30,9 @@ class AuthService {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
+      );
+      print(
+        'AuthService.signIn: signed in uid=${userCredential.user?.uid} email=$email',
       );
       return userCredential.user;
     } catch (e) {
@@ -73,11 +80,7 @@ class _SignInPageState extends State<SignInPage> {
 
     // Local test account support: bypass Firebase for known local users
     if (UserStorage.validateUser(email, password)) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileSettingsPage()),
-      );
-
+      // Treat local test user as existing user: go straight to HomePage
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -91,11 +94,10 @@ class _SignInPageState extends State<SignInPage> {
     final user = await _authService.signIn(email, password);
 
     if (user != null) {
-      // Show profile settings page before proceeding
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileSettingsPage()),
-      );
+      // Existing Firebase user: load remote profile and saved medicines,
+      // then go straight to HomePage (no profile page shown).
+      await UserStorage.loadUserProfileForCurrentUser();
+      await SavedMedicines.loadSavedForCurrentUser();
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -128,11 +130,17 @@ class _SignInPageState extends State<SignInPage> {
     final user = await _authService.signUp(email, password);
 
     if (user != null) {
-      // Optionally show the profile settings page after signup as well
+      // For newly created users, show the profile settings page first.
+      // After they save their profile, the flow will continue here and
+      // then navigate to the HomePage.
       await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const ProfileSettingsPage()),
       );
+
+      // Load remote profile and saved medicines (no-op if not present)
+      await UserStorage.loadUserProfileForCurrentUser();
+      await SavedMedicines.loadSavedForCurrentUser();
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -191,7 +199,7 @@ class _SignInPageState extends State<SignInPage> {
                         TextField(
                           controller: _emailController,
                           decoration: const InputDecoration(
-                            labelText: 'Username',
+                            labelText: 'Email',
                             prefixIcon: Icon(Icons.person),
                             border: OutlineInputBorder(),
                           ),

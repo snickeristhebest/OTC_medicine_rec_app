@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "639474301712",
+    "project_id": "otc-recs",
+    "storage_bucket": "otc-recs.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:639474301712:android:533bbe270b7a35f068c395",
+        "android_client_info": {
+          "package_name": "com.example.otc_recs"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvNGeI6hGwUrt3HBd5a25oEVssmlD2vCY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

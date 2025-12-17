@@ -61,32 +61,41 @@ class AppHeader extends StatelessWidget {
               ],
             ),
           ),
-          // Cart button
+          // Cart button (reactive to saved count)
           IconButton(
-            icon: Stack(
-              children: [
-                const Icon(Icons.shopping_cart, color: Colors.white, size: 28),
-                if (SavedMedicines.getSaved().isNotEmpty)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        '${SavedMedicines.getSaved().length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+            icon: ValueListenableBuilder<int>(
+              valueListenable: SavedMedicines.savedCount,
+              builder: (context, count, _) {
+                return Stack(
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    if (count > 0)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '$count',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                );
+              },
             ),
             onPressed: () {
               Navigator.push(

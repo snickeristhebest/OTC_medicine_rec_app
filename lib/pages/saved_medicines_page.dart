@@ -44,16 +44,26 @@ class _SavedMedicinesPageState extends State<SavedMedicinesPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.bookmark_border, size: 80, color: Colors.grey[400]),
+                          Icon(
+                            Icons.bookmark_border,
+                            size: 80,
+                            color: Colors.grey[400],
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'No saved medicines yet',
-                            style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Save medicines to view them here',
-                            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
                           ),
                         ],
                       ),
@@ -67,7 +77,11 @@ class _SavedMedicinesPageState extends State<SavedMedicinesPage> {
                           margin: const EdgeInsets.only(bottom: 16),
                           child: ListTile(
                             contentPadding: const EdgeInsets.all(16),
-                            leading: const Icon(Icons.medication, size: 40, color: Colors.orange),
+                            leading: const Icon(
+                              Icons.medication,
+                              size: 40,
+                              color: Colors.orange,
+                            ),
                             title: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -81,7 +95,11 @@ class _SavedMedicinesPageState extends State<SavedMedicinesPage> {
                                 if (med.rating > 0)
                                   Row(
                                     children: [
-                                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                                      const Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
+                                        size: 16,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         med.rating.toStringAsFixed(1),
@@ -100,17 +118,35 @@ class _SavedMedicinesPageState extends State<SavedMedicinesPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () {
-                                    setState(() {
-                                      SavedMedicines.toggleSave(med);
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Removed from saved'),
-                                        duration: Duration(seconds: 1),
-                                      ),
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () async {
+                                    final messenger = ScaffoldMessenger.of(
+                                      context,
                                     );
+                                    try {
+                                      await SavedMedicines.toggleSave(med);
+                                      if (!mounted) return;
+                                      setState(() {});
+                                      messenger.showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Removed from saved'),
+                                          duration: Duration(seconds: 1),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      if (mounted) {
+                                        messenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Error removing saved: $e',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
                                   },
                                 ),
                                 ElevatedButton(
@@ -118,7 +154,8 @@ class _SavedMedicinesPageState extends State<SavedMedicinesPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => MedicineDetailPage(medicine: med),
+                                        builder: (context) =>
+                                            MedicineDetailPage(medicine: med),
                                       ),
                                     ).then((_) {
                                       setState(() {});
